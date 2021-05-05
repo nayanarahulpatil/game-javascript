@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,400;1,300&display=swap" rel="stylesheet">
+        <style>
+            *{margin: 0;padding: 0;box-sizing: border-box;font-family: 'Josefin Sans', sans-serif;}
+            .game{width: 100%;height: 100vh;background-size: 100% 100%;background-repeat: no-repeat;}
+            .hide{display: none;}
+            .objcar, .enemycar
+            {width: 50px; height: 70px; position: absolute;
+            background-color: red;left:50px ;bottom:160px ;}
+            .game_area
+            {width:400px;height: 100vh;margin: auto; 
+            background-color: #2d3436; position: relative;}
+            .lines
+            {width: 10px;height: 100px; position: absolute;
+            background-color: white;margin-left: 195px;}
+            .score_board
+            {top: 10px;left: 30px;background-color:#10ac84;width: 300px; line-height: 70px;color: rgb(34, 26, 26);
+            text-align: center;position: absolute;font-size: 1.3em;
+             box-shadow: 0px 5px 5px #777;}
+.start_game
+{text-align: center; box-shadow: 0px 5px 5px #777;background-color:#ee5253;color: white; 
+/*make div at center of another div*/ left: 50%;top: 50%;transform: translate(-50%,-50%) ;margin: auto;position: absolute;
+/*z imdex for make it on top not background*/ z-index: 1; padding: 15px;width: 50%;
+letter-spacing:5 ;font-size: 20px;word-spacing: 3;cursor: pointer;line-height: 30px;text-transform: uppercase;}
+        
+        </style>
+    </head>
+    <body>
+        <div class="game">
+            <div class="score_board"></div>
+            <div class="start_game">
+                <p>press here to star<br>
+                    use key to move<br>
+                    If you hit another car then u will lose a game
+                </p>
+            </div>
+            <div class="game_area"> 
+              
+            </div>
+        </div>
+        <script>
+           const game_area= document.querySelector('.game_area');
+           const score_board= document.querySelector('.score_board');
+           const start_game= document.querySelector('.start_game');
+           
+           start_game.addEventListener("click",start)
+           let player={speed:5,score:0};
+
+           let direction = {ArrowUp:false, ArrowDown:false,ArrowRight:false,ArrowLeft:false}
+           //for determine which key user is pressing 
+           document.addEventListener("keydown",keyDown)
+           function keyDown(e)
+           {
+               e.preventDefault();
+               direction[e.key]=true;
+               console.log(direction);
+           }
+           document.addEventListener("keyup",keyUp)
+           function keyUp(e)
+           {
+               e.preventDefault();
+               direction[e.key]=false;
+               //console.log(e.key);
+           }
+
+           function iscollide(a,b)
+           {
+               let arect = a.getBoundingClientRect();
+               let brect = b.getBoundingClientRect();
+               return !((arect.bottom<brect.top)||(arect.top>brect.bottom)||(arect.right<brect.left)||(arect.left>brect.right))
+           }
+
+           function moveline()
+           {
+               let moveline = document.querySelectorAll(".lines");
+               moveline.forEach(function(val){
+                if(val.y >=800)
+               {
+                val.y-=750;
+               }
+                   val.y += player.speed;
+                   val.style.top=val.y+"px";
+
+               })
+           }
+
+           function endgame()
+           {
+             player.star=false;
+             start_game.classList.remove("hide");
+             start_game.innerText="try again";
+           }
+           
+
+           function moveenemy(car)
+           {
+            let enemycar = document.querySelectorAll(".enemycar");
+            enemycar.forEach(function(val){
+                if(iscollide(car,val))
+                {
+                    endgame();
+                }
+                if(val.y >=800)
+               {
+                val.style.left=Math.floor(Math.random()*360)+"px";
+                val.y = -300;
+               }
+                   val.y += player.speed;
+                   val.style.top=val.y+"px";
+                  
+            })
+
+           }
+
+           function gameplay()
+           {
+               let car = document.querySelector(".objcar");
+
+      //get boundries and position of an element we write method getBoundingClientRect
+               let road = game_area.getBoundingClientRect();
+
+               if(player.star)
+               {
+                    //we adding one fun for moving lines
+                    moveline(); 
+                    moveenemy(car); 
+
+                   if(direction.ArrowUp && player.y> (road.top+50)){player.y -=player.speed}
+                   if(direction.ArrowDown &&player.y<(road.bottom-70)){player.y +=player.speed}
+                   if(direction.ArrowRight &&player.x <(road.width-50)){player.x +=player.speed}
+                   if(direction.ArrowLeft && player.x>0){player.x -=player.speed}
+
+                   car.style.top=player.y+"px";
+                   car.style.left=player.x+"px";
+
+                    window.requestAnimationFrame(gameplay);
+                    player.score++;
+                    score_board.innerText= "The score is:"+player.score;
+               }
+           }
+           function start()
+           {
+               start_game.classList.add("hide");
+               //game_area.classList.remove("hide");
+               game_area.innerHTML="";
+               player.star=true;
+               player.score=0;
+
+               //for add annimation we google (request animation frame)and then add this line
+               //here gameplay is a function which we want annimate
+               window.requestAnimationFrame(gameplay);
+
+               //create roadlines new div as child div of game_area and for loading it 5 times we use for loop
+            for(let x =0;x<5;x++)
+            {
+               let roadline = document.createElement("div");
+               roadline.setAttribute("class","lines");
+               roadline.y=x*150;
+               roadline.style.top=roadline.y+"px";
+               game_area.appendChild(roadline);
+            }
+
+               //add one div inside the game_area div
+               let car = document.createElement("div");
+               car.setAttribute('class','objcar');
+               game_area.appendChild(car);
+
+               
+               //create enemy car new div as child div of game_area and for loading it 5 times we use for loop
+            for(let x =0;x<3;x++)
+            {
+               let enemycar = document.createElement("div");
+               enemycar.setAttribute("class","enemycar");
+               enemycar.y= ((x+1)*360)*-1;
+               enemycar.style.top=enemycar.y+"px";
+               enemycar.style.left=Math.floor(Math.random()*360)+"px";
+               enemycar.style.background="blue";
+               game_area.appendChild(enemycar);
+            }
+               
+               //get starting position of car
+               player.x=car.offsetLeft;
+               player.y=car.offsetTop;
+
+               console.log("top position:" +car.offsetTop);
+               console.log("left position:" +car.offsetLeft);
+
+           }
+
+        </script>
+    </body>
+</html>
